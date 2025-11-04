@@ -1,0 +1,16 @@
+{
+  "name": "recflix-node",
+  "version": "1.0.0",
+  "description": "Express server that connects the React frontend to the Python backend for RecFlix.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
