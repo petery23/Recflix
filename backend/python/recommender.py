@@ -1,39 +1,53 @@
+# recommender.py
 from loader import load_movies
-from algorithms import merge_sort, quick_sort
-
+# from algorithms import merge_sort, quick_sort  # Algorithms not yet integrated
+from models import Movie
 DATA_PATH = "data/movies.json"
 
-def compute_score(movie, prefs):
-    score = 0.0
+def compute_score(target: Movie, candidate: Movie):
+    score = 0
 
-    preferred_genre = prefs.get("genre")
-    if preferred_genre and preferred_genre.lower() in [g.lower() for g in movie.genres]:
-        score += 5
+    # Genre similarity
+    genre_overlap = len(set(target.genres) & set(candidate.genres))
+    score += genre_overlap * 100
 
-    min_year = prefs.get("minYear")
-    max_year = prefs.get("maxYear")
-    
-    if min_year and movie.year and movie.year >= int(min_year):
-        score += 1
-    if max_year and movie.year and movie.year <= int(max_year):
-        score += 1
+    # Region similarity
+    if target.region == candidate.region:
+        score += 200
 
-    score += movie.rating
+    # Rating contribution
+    score += candidate.rating * 20
+
+    # Year similarity (older movies slightly penalized)
+    if target.year > 0 and candidate.year > 0:
+        year_diff = abs(target.year - candidate.year)
+        score += max(0, 200 - year_diff)  # subtract up to 200 pts if far apart
 
     return score
 
-def get_recommendations(prefs: dict):
 
-    movies = load_movies(DATA_PATH)
+def recommend_movies(target_title, movies, top_n=10):
+    # 1. Find the target movie
+    target_movie = next((m for m in movies if m.title.lower() == target_title.lower()), None)
+    if not target_movie:
+        print("Movie not found.")
+        return []
 
-    for m in movies:
-        m.score = compute_score(m, prefs)
+    recommendations = []
 
-    algo = prefs.get("algorithm", "merge").lower()
+    # 2. Assign scores to every other movie
+    for candidate in movies:
+        if candidate.title != target_movie.title:
+            candidate.score = compute_score(target_movie, candidate)
+            recommendations.append(candidate)
 
-    if algo == "quick":
-        movies = quick_sort(movies, key=lambda x: x.score, reverse=True)
-    else:
-        movies = merge_sort(movies, key=lambda x: x.score, reverse=True)
-    
-    return movies[:10]
+    # ----------------------------------------------------------------------
+    # TO BE COMPLETED BY TEAMMATE: INTEGRATE SORTING ALGORITHMS HERE
+    # ----------------------------------------------------------------------
+    # recommendations.sort(key=lambda m: m.score, reverse=True) # REMOVED: Use custom sort
+
+    # For now, we'll use Python's built-in sort to ensure the program runs
+    # This line MUST BE replaced by quick_sort() or merge_sort() later.
+    recommendations.sort(key=lambda m: m.score, reverse=True)
+
+    return recommendations[:top_n]

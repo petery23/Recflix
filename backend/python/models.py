@@ -1,3 +1,4 @@
+
 from dataclasses import dataclass
 
 @dataclass
@@ -7,4 +8,5 @@ class Movie:
     rating: float
     length: int
     year: int
+    region: str
     score: float = 0.0

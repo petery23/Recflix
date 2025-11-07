@@ -1,19 +1,32 @@
+import os
+import pandas as pd
 from models import Movie
 
-def load_movies(path) -> list[Movie]:
+def load_movies():
+    # Load CSV files
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where loader.py lives
+    genre_path = os.path.join(base_dir, "contentDataGenre.csv")
+    prime_path = os.path.join(base_dir, "contentDataPrime.csv")
+    region_path = os.path.join(base_dir, "contentDataRegion.csv")
+
+    genre_df = pd.read_csv(genre_path, thousands = ',')
+    prime_df = pd.read_csv(prime_path, thousands = ',')
+    region_df = pd.read_csv(region_path, thousands = ',')
+
+    # Merge by dataId
+    merged = prime_df.merge(genre_df.groupby("dataId")["genre"].apply(list).reset_index(), on="dataId", how="left")
+    merged = merged.merge(region_df.groupby("dataId")["region"].apply(list).reset_index(), on="dataId", how="left")
 
     movies = []
+    for _, row in merged.iterrows():
+        title = row["title"]
+        genres = row["genre"] if isinstance(row["genre"], list) else []
+        rating = float(row["rating"]) if row["rating"] != -1 else 0.0
+        length = int(row["length"]) if row["length"] != -1 else 0
+        year = int(row["releaseYear"]) if row["releaseYear"] != -1 else 0
+        region = row["region"][0] if isinstance(row["region"], list) and len(row["region"]) > 0 else "Unknown"
 
-    return [
-        Movie(title="Movie A", genres=["Action", "Adventure"], rating=7.5, year=2020),
-        Movie(title="Movie B", genres=["Action", "Adventure"], rating=7.5, year=2020),
-        Movie(title="Movie C", genres=["Drama", "Romance"], rating=8.0, year=2021),
-        Movie(title="Movie D", genres=["Sci-Fi", "Thriller"], rating=6.5, year=2019),
-        Movie(title="Movie E", genres=["Comedy", "Drama"], rating=7.0, year=2022),
-        Movie(title="Movie F", genres=["Action", "Adventure"], rating=8.5, year=2023),
-        Movie(title="Movie G", genres=["Drama", "Romance"], rating=9.0, year=2024),
-        Movie(title="Movie H", genres=["Sci-Fi", "Thriller"], rating=7.5, year=2025),
-        Movie(title="Movie I", genres=["Comedy", "Drama"], rating=8.0, year=2026),
-        Movie(title="Movie J", genres=["Action", "Adventure"], rating=8.5, year=2027),
-    ]
-    
+        movie = Movie(title=title, genres=genres, rating=rating, length=length, year=year, region=region)
+        movies.append(movie)
+
+    return movies

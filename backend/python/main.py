@@ -1,20 +1,18 @@
 import sys
 import json
-from recommender import get_recommendations
-from dataclasses import asdict
+from loader import load_movies
+from recommender import recommend_movies
 
 def main():
+    movies = load_movies()
+    print(f"Loaded {len(movies)} movies.\n")
 
-    try:
-        prefs = json.load(sys.stdin)
-    except json.JSONDecodeError:
-        prefs = {}
+    target_title = input("Enter a movie title to base recommendations on: ")
+    top_movies = recommend_movies(target_title, movies)
 
-    recommendations = get_recommendations(prefs)
-
-    recommendations_dict = [asdict(movie) for movie in recommendations]
-
-    json.dump(recommendations_dict, sys.stdout)
+    print("\nTop Recommendations:")
+    for i, m in enumerate(top_movies, 1):
+        print(f"{i}. {m.title} ({m.year}) | Rating: {m.rating} | Region: {m.region} | Score: {round(m.score, 2)}")
 
 if __name__ == "__main__":
     main()
