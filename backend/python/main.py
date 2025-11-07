@@ -1,18 +1,33 @@
 import sys
 import json
+from dataclasses import asdict
+from search import search_movies
 from loader import load_movies
 from recommender import recommend_movies
 
 def main():
-    movies = load_movies()
-    print(f"Loaded {len(movies)} movies.\n")
+    try:
+        prefs = json.load(sys.stdin)
+    except json.JSONDecodeError:
+        print(json.dumps({"error": "Invalid JSON input"}))
+        return
 
-    target_title = input("Enter a movie title to base recommendations on: ")
-    top_movies = recommend_movies(target_title, movies)
+    if "search_query" in prefs:
+        query = prefs.get("search_query")
+        results = search_movies(query)
+        print(json.dumps(results))
 
-    print("\nTop Recommendations:")
-    for i, m in enumerate(top_movies, 1):
-        print(f"{i}. {m.title} ({m.year}) | Rating: {m.rating} | Region: {m.region} | Score: {round(m.score, 2)}")
+    elif "target_title" in prefs:
+        movies = load_movies()
+        target_title = prefs.get("target_title")
+        recommendations = recommend_movies(target_title, movies)
+
+        recommendations_dict = [asdict(movie) for movie in recommendations]
+        print(json.dumps(recommendations_dict))
+
+    else:
+        print(json.dumps({"error": "Invalid request. Missing 'search_query' or 'target_title'"}))
+
 
 if __name__ == "__main__":
     main()

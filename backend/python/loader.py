@@ -3,11 +3,11 @@ import pandas as pd
 from models import Movie
 
 def load_movies():
-    # Load CSV files
-    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where loader.py lives
-    genre_path = os.path.join(base_dir, "contentDataGenre.csv")
-    prime_path = os.path.join(base_dir, "contentDataPrime.csv")
-    region_path = os.path.join(base_dir, "contentDataRegion.csv")
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    data_dir = os.path.join(project_root, 'data')
+    genre_path = os.path.join(data_dir, "contentDataGenre.csv")
+    prime_path = os.path.join(data_dir, "contentDataPrime.csv")
+    region_path = os.path.join(data_dir, "contentDataRegion.csv")
 
     genre_df = pd.read_csv(genre_path, thousands = ',')
     prime_df = pd.read_csv(prime_path, thousands = ',')
