@@ -6,6 +6,7 @@ from loader import load_movies
 from recommender import recommend_movies
 
 def main():
+    movies = load_movies()
     try:
         prefs = json.load(sys.stdin)
     except json.JSONDecodeError:
@@ -14,11 +15,10 @@ def main():
 
     if "search_query" in prefs:
         query = prefs.get("search_query")
-        results = search_movies(query)
+        results = search_movies(query, movies)
         print(json.dumps(results))
 
     elif "target_title" in prefs:
-        movies = load_movies()
         target_title = prefs.get("target_title")
         recommendations = recommend_movies(target_title, movies)
 

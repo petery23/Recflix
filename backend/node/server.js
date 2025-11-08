@@ -1,13 +1,16 @@
 const express = require("express");
 const { spawn } = require("child_process");
 const path = require("path");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.post("/search", (req, res) => {
     const pythonPath = path.resolve(__dirname, "../python/main.py");
-    const py = spawn("py", [pythonPath]);
+    const pythonVenvPath = path.resolve(__dirname, "../python/venv/Scripts/python.exe");
+    const py = spawn(pythonVenvPath, [pythonPath]);
 
     let output = "";
     let errorOutput = "";
@@ -41,7 +44,8 @@ app.post("/search", (req, res) => {
 
 app.post("/recommend", (req, res) => {
     const pythonPath = path.resolve(__dirname, "../python/main.py");
-    const py = spawn("py", [pythonPath]);
+    const pythonVenvPath = path.resolve(__dirname, "../python/venv/Scripts/python.exe");
+    const py = spawn(pythonVenvPath, [pythonPath]);
 
     let output = "";
     let errorOutput = "";
