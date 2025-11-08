@@ -8,11 +8,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Helper function to get Python executable path
 function getPythonExecutable() {
     const venvPath = path.resolve(__dirname, "../python/venv");
     
-    // Try venv Python first (platform-specific)
     if (process.platform === 'win32') {
         const venvPython = path.join(venvPath, "Scripts", "python.exe");
         if (fs.existsSync(venvPython)) {
@@ -25,7 +23,6 @@ function getPythonExecutable() {
         }
     }
     
-    // Fallback to system Python
     return process.platform === 'win32' ? 'python' : 'python3';
 }
 
