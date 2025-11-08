@@ -7,6 +7,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [sortAlgorithm, setSortAlgorithm] = useState<'quick' | 'merge'>('merge');
   const router = useRouter();
 
   useEffect(() => {
@@ -35,24 +36,43 @@ export default function HomeScreen() {
   }, [searchQuery]);
 
   const handleSelectMovie = async (title: string) => {
-    if (!title || title === 'No results found') return;
+    if (!title) {
+      return;
+    }
+    
+    if (title === 'No results found') {
+      return;
+    }
     
     setLoading(true);
     setSuggestions([]);
+    
     try {
-      const recommendations = await getRecommendations(title);
-      if(recommendations.length > 0){
+      const response = await getRecommendations(title, sortAlgorithm);
+      
+      if (response.movies.length > 0) {
         router.push({
           pathname: "/results",
-          params: { movies: JSON.stringify(recommendations) },
-        })
-      }
-      else{
-        Alert.alert("No recommendations found", "Please try a different movie.");
+          params: { 
+            movies: JSON.stringify(response.movies),
+            sortTime: response.sortTime.toString(),
+            algorithm: response.algorithm,
+            otherSortTime: response.otherSortTime.toString(),
+            otherAlgorithm: response.otherAlgorithm
+          },
+        });
+      } else {
+        Alert.alert(
+          "No recommendations found", 
+          "Please try a different movie."
+        );
       }
     } catch (error) {
       console.error("Error fetching recommendations:", error);
-      Alert.alert("Error", "Failed to fetch recommendations. Please try again.");
+      Alert.alert(
+        "Error", 
+        "Failed to fetch recommendations. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -68,6 +88,47 @@ export default function HomeScreen() {
       <View style={styles.backgroundShape} />
       <View style={styles.contentContainer}>
         <Text style={styles.title}>Recflix</Text>
+        <View style={styles.sortContainer}>
+          <Text style={styles.sortLabel}>Sort Algorithm:</Text>
+          <View style={styles.sortButtons}>
+            <TouchableOpacity 
+              style={
+                sortAlgorithm === 'quick' 
+                  ? [styles.sortButton, styles.sortButtonActive]
+                  : styles.sortButton
+              } 
+              onPress={() => setSortAlgorithm('quick')}
+            >
+              <Text 
+                style={
+                  sortAlgorithm === 'quick' 
+                    ? [styles.sortButtonText, styles.sortButtonTextActive]
+                    : styles.sortButtonText
+                }
+              >
+                Quick Sort
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={
+                sortAlgorithm === 'merge' 
+                  ? [styles.sortButton, styles.sortButtonActive]
+                  : styles.sortButton
+              } 
+              onPress={() => setSortAlgorithm('merge')}
+            >
+              <Text 
+                style={
+                  sortAlgorithm === 'merge' 
+                    ? [styles.sortButtonText, styles.sortButtonTextActive]
+                    : styles.sortButtonText
+                }
+              >
+                Merge Sort
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <View style={styles.searchContainer}>
           <TextInput 
             style={styles.input}
@@ -90,13 +151,21 @@ export default function HomeScreen() {
               if (item === 'No results found') {
                 return (
                   <View style={styles.suggestionItem}>
-                    <Text style={styles.suggestionText}>{item}</Text>
+                    <Text style={styles.suggestionText}>
+                      {item}
+                    </Text>
                   </View>
                 );
               }
+              
               return (
-                <TouchableOpacity style={styles.suggestionItem} onPress={() => populateSearchBox(item)}>
-                  <Text style={styles.suggestionText}>{item}</Text>
+                <TouchableOpacity 
+                  style={styles.suggestionItem} 
+                  onPress={() => populateSearchBox(item)}
+                >
+                  <Text style={styles.suggestionText}>
+                    {item}
+                  </Text>
                 </TouchableOpacity>
               );
             }}
@@ -141,6 +210,45 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     color: 'red',
+  },
+  sortContainer: {
+    width: '100%',
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  sortLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'black',
+    marginBottom: 8,
+  },
+  sortButtons: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  sortButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'red',
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 5,
+  },
+  sortButtonActive: {
+    backgroundColor: 'red',
+  },
+  sortButtonText: {
+    color: 'red',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  sortButtonTextActive: {
+    color: 'white',
   },
   input: {
     height: 40,

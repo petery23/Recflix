@@ -28,20 +28,28 @@ export const searchMovies = async (query: string): Promise<string[]> => {
     }
 };
 
-export const getRecommendations = async (title: string): Promise<Movie[]> => {
+export interface RecommendationsResponse {
+    movies: Movie[];
+    sortTime: number;
+    algorithm: string;
+    otherSortTime: number;
+    otherAlgorithm: string;
+}
+
+export const getRecommendations = async (title: string, algorithm: 'quick' | 'merge' = 'merge'): Promise<RecommendationsResponse> => {
     try {
         const response = await fetch(`${API_URL}/recommend`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ target_title: title }),
+            body: JSON.stringify({ target_title: title, algorithm: algorithm }),
         })
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data: Movie[] = await response.json();
+        const data: RecommendationsResponse = await response.json();
         return data;
         } catch (error) {
             console.error("Error fetching recommendations:", error);

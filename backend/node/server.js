@@ -1,16 +1,38 @@
 const express = require("express");
 const { spawn } = require("child_process");
 const path = require("path");
+const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Helper function to get Python executable path
+function getPythonExecutable() {
+    const venvPath = path.resolve(__dirname, "../python/venv");
+    
+    // Try venv Python first (platform-specific)
+    if (process.platform === 'win32') {
+        const venvPython = path.join(venvPath, "Scripts", "python.exe");
+        if (fs.existsSync(venvPython)) {
+            return venvPython;
+        }
+    } else {
+        const venvPython = path.join(venvPath, "bin", "python");
+        if (fs.existsSync(venvPython)) {
+            return venvPython;
+        }
+    }
+    
+    // Fallback to system Python
+    return process.platform === 'win32' ? 'python' : 'python3';
+}
+
 app.post("/search", (req, res) => {
     const pythonPath = path.resolve(__dirname, "../python/main.py");
-    const pythonVenvPath = path.resolve(__dirname, "../python/venv/Scripts/python.exe");
-    const py = spawn(pythonVenvPath, [pythonPath]);
+    const pythonExecutable = getPythonExecutable();
+    const py = spawn(pythonExecutable, [pythonPath]);
 
     let output = "";
     let errorOutput = "";
@@ -44,8 +66,8 @@ app.post("/search", (req, res) => {
 
 app.post("/recommend", (req, res) => {
     const pythonPath = path.resolve(__dirname, "../python/main.py");
-    const pythonVenvPath = path.resolve(__dirname, "../python/venv/Scripts/python.exe");
-    const py = spawn(pythonVenvPath, [pythonPath]);
+    const pythonExecutable = getPythonExecutable();
+    const py = spawn(pythonExecutable, [pythonPath]);
 
     let output = "";
     let errorOutput = "";
