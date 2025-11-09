@@ -3,19 +3,15 @@ import pandas as pd
 from models import Movie
 
 def load_movies():
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    data_dir = os.path.join(project_root, 'data')
-    genre_path = os.path.join(data_dir, "contentDataGenre.csv")
-    prime_path = os.path.join(data_dir, "contentDataPrime.csv")
-    region_path = os.path.join(data_dir, "contentDataRegion.csv")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    merged_path = os.path.join(base_dir, "merged_movie_data.feather")
 
-    genre_df = pd.read_csv(genre_path, thousands = ',')
-    prime_df = pd.read_csv(prime_path, thousands = ',')
-    region_df = pd.read_csv(region_path, thousands = ',')
-
-    # Merge by dataId
-    merged = prime_df.merge(genre_df.groupby("dataId")["genre"].apply(list).reset_index(), on="dataId", how="left")
-    merged = merged.merge(region_df.groupby("dataId")["region"].apply(list).reset_index(), on="dataId", how="left")
+    try:
+        merged = pd.read_feather(merged_path)
+    except Exception as e:
+        print(f"ERROR: Could not read {merged_path}.")
+        print("Please run `pre_merge_data.py` again to generate the .feather file.")
+        return []
 
     movies = []
     for _, row in merged.iterrows():
@@ -24,7 +20,8 @@ def load_movies():
         rating = float(row["rating"]) if row["rating"] != -1 else 0.0
         length = int(row["length"]) if row["length"] != -1 else 0
         year = int(row["releaseYear"]) if row["releaseYear"] != -1 else 0
-        region = row["region"][0] if isinstance(row["region"], list) and len(row["region"]) > 0 else "Unknown"
+        region_list = row["region"] if isinstance(row["region"], list) else []
+        region = region_list[0] if region_list else "Unknown"
 
         movie = Movie(title=title, genres=genres, rating=rating, length=length, year=year, region=region)
         movies.append(movie)
